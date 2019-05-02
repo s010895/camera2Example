@@ -49,8 +49,10 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
   private static final String TAG = "CameraDebug";
   private Button takePictureButton;
+  private Button resetImg;
   private TextureView textureView;
   private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+  private int imageNumber;
 
   static {
     ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -81,11 +83,19 @@ public class MainActivity extends AppCompatActivity {
     assert textureView != null;
     textureView.setSurfaceTextureListener(textureListener);
     takePictureButton = (Button) findViewById(R.id.btn_takepicture);
+    resetImg = (Button) findViewById(R.id.btn_resetImgNumber);
+    imageNumber = 0;
     assert takePictureButton != null;
     takePictureButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         takePicture();
+      }
+    });
+    resetImg.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        imageNumber = 0;
       }
     });
   }
@@ -206,15 +216,17 @@ public class MainActivity extends AppCompatActivity {
       int jpegOrientation =
           (surfaceRotation + sensorOrientation + 270) % 360;
       captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, jpegOrientation);
-      final File folder = new File(Environment.getExternalStorageDirectory() + File.separator+ "Calibration");
-      if(!folder.exists()) {
+      final File folder = new File(Environment.getExternalStorageDirectory() + File.separator + "Calibration");
+      if (!folder.exists()) {
         boolean success = folder.mkdir();
         if (!success) {
           Toast.makeText(MainActivity.this, "Cannot create folder", Toast.LENGTH_SHORT).show();
           return;
         }
       }
-      final File file = new File(Environment.getExternalStorageDirectory() + File.separator + "Calibration/pic.jpg");
+      String fileName = String.format("Calibration/image%07d.jpg", imageNumber);
+      imageNumber++;
+      final File file = new File(Environment.getExternalStorageDirectory() + File.separator + fileName);
       ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
@@ -340,6 +352,7 @@ public class MainActivity extends AppCompatActivity {
       e.printStackTrace();
     }
   }
+
   //For horizental orientation
   private void transformImage(int width, int height) {
     if (mPreviewSize == null || textureView == null) {
